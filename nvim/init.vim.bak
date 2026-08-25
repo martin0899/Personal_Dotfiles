@@ -1,0 +1,238 @@
+set number              "linea numeros
+set mouse=a             "habilita el mouse
+set numberwidth=1
+set clipboard=unnamedplus
+syntax enable           "resaltado se sintaxis
+set showcmd             "muestra los comandos
+set ruler               "mostrar posicion de cursor
+set cursorline
+set encoding=utf-8
+set showmatch
+set sw=2
+
+set nowrap
+set laststatus=2        "mostra la linea de estado
+set noshowmode
+" diccionario 
+set spell
+set spelllang=es
+
+call plug#begin('~/.vim/plugged')
+"tema
+Plug 'morhetz/gruvbox'
+"IDE
+Plug 'nvim-lua/plenary.nvim'
+Plug 'nvim-telescope/telescope.nvim'
+Plug 'junegunn/fzf', { 'do': { -> fzf#install() } } "Buscador de archivos y lieas
+Plug 'junegunn/fzf.vim'
+Plug 'neovim/nvim-lspconfig'  
+Plug 'easymotion/vim-easymotion'		"mover entre lineas	
+Plug 'scrooloose/nerdtree'              "mapa de navegacion
+Plug 'christoomey/vim-tmux-navigator'   "navegar entre pestañas
+Plug 'jiangmiao/auto-pairs'             "completar parentesis
+Plug 'sphamba/smear-cursor.nvim'   "cursor mas bonito
+Plug 'j-hui/fidget.nvim'
+Plug 'rmagatti/logger.nvim'
+Plug 'rmagatti/goto-preview'   "previsualizar definiciones en ventana flotante
+Plug 'MeanderingProgrammer/render-markdown.nvim'  "renderizar markdown en nvim
+
+" EL MOTOR PARA ACOMPLETADOR
+Plug 'hrsh7th/nvim-cmp'         
+
+" FUENTES PARA EL MOTOR
+Plug 'hrsh7th/cmp-nvim-lsp'     " Autocompletado del lenguaje (Java, JS, etc.)
+Plug 'hrsh7th/cmp-buffer'       " Autocompletado de palabras en el archivo
+Plug 'hrsh7th/cmp-path'         " Autocompletado de rutas de carpetas
+Plug 'saadparwaiz1/cmp_luasnip' " EL PUENTE (El que causó el error)
+
+" SNIPPETS
+Plug 'L3MON4D3/LuaSnip', {'tag': 'v2.*', 'do': 'make install_jsregexp'}
+Plug 'rafamadriz/friendly-snippets'
+
+call plug#end()
+
+colorscheme gruvbox
+let g:gruvbox_contraste_dark ="hard"
+let g:vim_vue_plugin_load_full_syntax = 1
+let g:rainbow_active = 1
+" Cerrar el nerdtree
+let NERDTreeQuitOnOpen=1
+" Mantener NERDTree en el directorio actual
+let g:NERDTreeChDirMode = 2
+" Refrescar NERDTree automáticamente al entrar a su ventana
+autocmd BufEnter * if &ft ==# 'nerdtree' | silent! execute 'normal R' | endif
+
+" tecla para mapeo de funciones especiales
+let mapleader=" "
+
+let g:coc_snippet_show_warning = 0
+
+"atajos con el teclado
+nnoremap <Leader>q :q<CR>
+nnoremap <Leader>w :w!<CR>
+nnoremap <Leader>s :wq<CR>
+nnoremap <Leader>x :q!<CR>
+nnoremap <Leader>e <Plug>(easymotion-s2)
+nnoremap <Leader>t :NERDTreeCWD<CR>
+nnoremap <Leader>h :NERDTreeFind<CR>
+"atajos para busqueda de archivos
+nnoremap <Leader>l :Line<CR>
+nnoremap <Leader>f :FZF<CR>
+nnoremap <leader>ff <cmd>Telescope find_files<cr>
+nnoremap <leader>fl <cmd>Telescope live_grep<cr>
+nnoremap <leader>fb <cmd>Telescope buffers<cr>
+
+nnoremap <C-h> <C-w>h
+nnoremap <C-l> <C-w>l
+nnoremap <C-j> <C-w>j
+nnoremap <C-k> <C-w>k
+
+" :Files: Abre FZF para buscar archivos en el proyecto.
+" :Buffers: Abre FZF para seleccionar buffers abiertos.
+
+lua require('smear_cursor').enabled = true
+
+lua << EOF
+-- Configuración de Fidget
+require("fidget").setup {
+  -- tus opciones de fidget aquí
+  -- Opciones relacionadas con la ventana de notificaciones y el buffer
+    window = {
+      normal_hl = "Comment",      -- Grupo de resaltado (color) base en la ventana de notificaciones
+      winblend = 100,             -- Opacidad del color de fondo (0 = opaco, 100 = transparente)
+      border = "none",            -- Borde alrededor de la ventana de notificaciones
+      zindex = 45,                -- Prioridad de apilamiento (capas) de la ventana
+      max_width = 0,              -- Ancho máximo de la ventana
+      max_height = 0,             -- Altura máxima de la ventana
+      x_padding = 1,              -- Espacio (relleno) desde el borde derecho de la pantalla
+      y_padding = 0,              -- Espacio (relleno) desde el borde inferior de la pantalla
+      align = "bottom",           -- Cómo alinear la ventana de notificaciones
+      relative = "editor",        -- A qué es relativa la posición de la ventana (al editor completo)
+      tabstop = 8,                -- Ancho de cada carácter de tabulación en la ventana
+      avoid = {}                  -- Tipos de archivo que la ventana debe evitar ej: { "aerial", "NvimTree", "neotest-summary" }
+    },
+}
+
+local ls = require("luasnip")
+
+-- Carga snippets estilo VS Code (Java, JS, SQL, etc.)
+require("luasnip.loaders.from_vscode").lazy_load()
+
+-- CONFIGURACIÓN DE TECLAS
+-- <C-K> para expandir el snippet o saltar al siguiente campo
+vim.keymap.set({"i", "s"}, "<C-K>", function()
+  if ls.expand_or_jumpable() then
+    ls.expand_or_jump()
+  end
+end, {silent = true})
+
+-- <C-J> para volver al campo anterior
+vim.keymap.set({"i", "s"}, "<C-J>", function()
+  if ls.jumpable(-1) then
+    ls.jump(-1)
+  end
+end, {silent = true})
+
+-- Selección de elección (para snippets que tienen varias opciones)
+vim.keymap.set({"i", "s"}, "<C-L>", function()
+  if ls.choice_active() then
+    ls.change_choice(1)
+  end
+end, {silent = true})
+
+local cmp = require('cmp')
+
+cmp.setup({
+  snippet = {
+    expand = function(args)
+      require('luasnip').lsp_expand(args.body)
+    end,
+  },
+  mapping = cmp.mapping.preset.insert({
+    ['<Tab>'] = cmp.mapping.select_next_item(),
+    ['<S-Tab>'] = cmp.mapping.select_prev_item(),
+    ['<CR>'] = cmp.mapping.confirm({ select = true }),
+  }),
+  sources = cmp.config.sources({
+    { name = 'nvim_lsp' },
+    { name = 'luasnip' },
+  }, {
+    { name = 'buffer' },
+  })
+})
+
+require('telescope').setup{
+  defaults = {
+    file_ignore_patterns = {
+      "target",
+      "node_modules",
+      ".git"
+    }
+  }
+}
+
+-- LSP: servidores de lenguaje
+local lspconfig = require('lspconfig')
+local capabilities = require('cmp_nvim_lsp').default_capabilities()
+
+-- TypeScript / JavaScript (React)
+lspconfig.ts_ls.setup { capabilities = capabilities }
+
+-- C / C++
+lspconfig.clangd.setup { capabilities = capabilities }
+
+-- HTML
+lspconfig.html.setup { capabilities = capabilities }
+
+-- CSS
+lspconfig.cssls.setup { capabilities = capabilities }
+
+-- goto-preview: previsualizar definiciones LSP en ventana flotante
+require('goto-preview').setup {
+  default_mappings = false,
+  height = 15,
+  width = 120,
+}
+
+vim.keymap.set("n", "gpd", "<cmd>lua require('goto-preview').goto_preview_definition()<CR>", { noremap = true, desc = "goto preview definition" })
+vim.keymap.set("n", "gpD", "<cmd>lua require('goto-preview').goto_preview_declaration()<CR>", { noremap = true, desc = "goto preview declaration" })
+vim.keymap.set("n", "gpi", "<cmd>lua require('goto-preview').goto_preview_implementation()<CR>", { noremap = true, desc = "goto preview implementation" })
+vim.keymap.set("n", "gpy", "<cmd>lua require('goto-preview').goto_preview_type_definition()<CR>", { noremap = true, desc = "goto preview type definition" })
+vim.keymap.set("n", "gpr", "<cmd>lua require('goto-preview').goto_preview_references()<CR>", { noremap = true, desc = "goto preview references" })
+vim.keymap.set("n", "gP", "<cmd>lua require('goto-preview').close_all_win()<CR>", { noremap = true, desc = "close all preview windows" })
+
+require("render-markdown").setup({
+  heading = {
+    enabled = true,
+    sign = true,
+    style = "full",
+    icons = { "① ", "② ", "③ ", "④ ", "⑤ ", "⑥ " },
+    left_pad = 1,
+  },
+  bullet = {
+    enabled = true,
+    icons = { "●", "○", "◆", "◇" },
+    right_pad = 1,
+    highlight = "render-markdownBullet",
+  },
+  checkbox = {
+    enabled = true,
+    unchecked = {
+      icon = "󰄱     ",
+      highlight = "RenderMarkdownUnchecked",
+    },
+    checked = {
+      icon = "󰱒     ",
+      highlight = "RenderMarkdownChecked",
+    },
+    custom = {
+      todo = { raw = "[-]", rendered = "󰥔     ", highlight = "RenderMarkdownTodo" },
+    },
+  },
+})
+
+EOF
+
+
+
+

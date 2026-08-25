@@ -1,0 +1,22 @@
+# Dotfiles .gitignore
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Neovim plugin data (managed by lazy.nvim)
+nvim/plugin/
+
+# Backup directory (local to each machine)
+.dotfiles-backup/
+
+# OpenSpec (managed separately)
+openspec/
+.opencode/

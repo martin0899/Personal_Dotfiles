@@ -12,7 +12,9 @@ Thumbs.db
 .idea/
 
 # Neovim plugin data (managed by lazy.nvim)
-nvim/plugin/
+nvim/nvim/lazy/
+nvim/nvim/plugin/
+*.netrwhist
 
 # Backup directory (local to each machine)
 .dotfiles-backup/

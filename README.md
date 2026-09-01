@@ -28,7 +28,7 @@ The `install.sh` script will:
 
 1. **Detect environment** - Fedora, Debian/Ubuntu, or WSL
 2. **Backup existing configs** - Saved to `~/.dotfiles-backup/<timestamp>/`
-3. **Install CLI tools** - fzf, bat, eza, zoxide, starship, lazygit, ranger, thefuck, duf, neovim
+3. **Install CLI tools** - fzf, bat, eza, zoxide, starship, lazygit, ranger, thefuck, duf, neovim, fastfetch, tty-clock, scrcpy, podman (best effort per distro; ncspot and tldr are skipped on Ubuntu since apt doesn't package them)
 4. **Create symlinks** - Via GNU Stow
 
 ### Prerequisites
@@ -52,10 +52,9 @@ The uninstall script will:
 ## WSL Support
 
 When running on WSL2, the installer automatically:
-- Installs `ncspot` binary (instead of snap)
 - Installs `win32yank` for clipboard integration
 - Adds WSL-specific aliases (`explorer`, `code`)
-- Skips snap-based tools
+- Skips snap-based tools and tools not available via apt (ncspot, tldr)
 
 ## Structure
 
@@ -95,11 +94,7 @@ Edit `bash/.bashrc` directly. Changes will be symlinked to `~/.bashrc` on next i
 
 ### Stow Conflicts
 
-If stow reports conflicts, the installer will attempt to adopt existing files. To manually resolve:
-
-```bash
-stow --adopt <package> -d . -t ~
-```
+Before stowing, the installer **moves** any existing conflicting configs to `~/.dotfiles-backup/<timestamp>/` so stow never needs to overwrite or adopt files. Packages that go into `~/.config/<name>/` (`nvim`, `ranger`, `fastfetch`) must contain a `<name>/` subdirectory; the installer validates this and refuses to stow otherwise, so files never get scattered in `~/.config/`. If stow still reports a conflict, remove the offending file manually and re-run `./install.sh`.
 
 ### Backup Restoration
 

@@ -1,176 +1,152 @@
-# .bashrc
+# ~/.bashrc: executed by bash(1) for non-login shells.
+# see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
+# for examples
 
-# Source global definitions
-if [ -f /etc/bashrc ]; then
-	. /etc/bashrc
-fi
-
-# User specific environment
-if ! [[ "$PATH" =~ "$HOME/.local/bin:$HOME/bin:" ]]
-then
-    PATH="$HOME/.local/bin:$HOME/bin:$PATH"
-fi
-export PATH
-
-# Uncomment the following line if you don't like systemctl's auto-paging feature:
-# export SYSTEMD_PAGER=
-
-# User specific aliases and functions
-if [ -d ~/.bashrc.d ]; then
-	for rc in ~/.bashrc.d/*; do
-		if [ -f "$rc" ]; then
-			. "$rc"
-		fi
-	done
-fi
-
-unset rc
-
-# ---- WSL Detection (4.5) ----
-is_wsl() {
-    grep -qi microsoft /proc/version 2>/dev/null
-}
-
-# ---- WSL-specific configuration (4.6) ----
-if is_wsl; then
-    # Windows home directory integration
-    WIN_USER=$(cmd.exe /c "echo %USERNAME%" 2>/dev/null | tr -d '\r')
-    if [ -n "$WIN_USER" ]; then
-        export WIN_HOME="/mnt/c/Users/${WIN_USER}"
-    fi
-
-    # WSL-specific aliases
-    alias explorer='explorer.exe .'
-    alias code='code.cmd'
-
-    # Clipboard integration for WSL (win32yank)
-    if command -v win32yank.exe &>/dev/null; then
-        export CLIPBOARD_PROVIDER="win32yank"
-    fi
-fi
-
-# ---- Load Angular CLI autocompletion (4.3) ----
-if command -v ng &>/dev/null; then
-    source <(ng completion script)
-fi
-
-# ---- Android SDK (4.2 - conditional) ----
-if [ -d "$HOME/Android/Sdk" ]; then
-    export ANDROID_HOME="$HOME/Android/Sdk"
-    export PATH="$PATH:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools"
-    export ANDROID_SDK_ROOT="$ANDROID_HOME"
-fi
-
-# ---- Flutter SDK (4.2 - conditional) ----
-if [ -d "$HOME/Documentos/flutter/bin" ]; then
-    export PATH="$PATH:$HOME/Documentos/flutter/bin"
-fi
-if [ -d "$HOME/Documentos/Aplicativos/flutter_linux_3.38.5-stable/flutter/bin" ]; then
-    export PATH="$PATH:$HOME/Documentos/Aplicativos/flutter_linux_3.38.5-stable/flutter/bin"
-fi
-
-# ---- Snap (4.2 - conditional, skip on WSL) ----
-if ! is_wsl && [ -d /snap/bin ]; then
-    export PATH=$PATH:/snap/bin
-fi
-
-# ---- Rust/Cargo (4.2 - conditional) ----
-if [ -d "$HOME/.cargo/bin" ]; then
-    export PATH="$HOME/.cargo/bin:$PATH"
-fi
-
-# ---- pnpm (4.1 - using $HOME) ----
-export PNPM_HOME="$HOME/.local/share/pnpm"
-case ":$PATH:" in
-  *":$PNPM_HOME/bin:"*) ;;
-  *) export PATH="$PNPM_HOME/bin:$PATH" ;;
+# If not running interactively, don't do anything
+case $- in
+    *i*) ;;
+      *) return;;
 esac
 
-# ---- Neovim (4.2 - conditional) ----
-if [ -d /opt/nvim ]; then
-    export PATH="$PATH:/opt/nvim/"
-fi
-export EDITOR=nvim
-export VISUAL=nvim
+# don't put duplicate lines or lines starting with space in the history.
+# See bash(1) for more options
+HISTCONTROL=ignoreboth
 
-# ---- Personal aliases ----
-if [ -f ~/.personal/aliases.sh ]; then
-  source ~/.personal/aliases.sh
-fi
-export PATH="$HOME/.personal/bin:$PATH"
+# append to the history file, don't overwrite it
+shopt -s histappend
 
-# ---- Ranger cd function ----
-function rgr() {
-    local temp_file="$(mktemp -t "ranger_cd.XXXXXXXXXX")"
-    ranger --choosedir="$temp_file" "$@"
-    if [ -f "$temp_file" ]; then
-        local target_dir="$(cat "$temp_file")"
-        rm -f "$temp_file"
-        if [ -d "$target_dir" ] && [ "$target_dir" != "$(pwd)" ]; then
-            cd "$target_dir"
-        fi
+# for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
+HISTSIZE=1000
+HISTFILESIZE=2000
+
+# check the window size after each command and, if necessary,
+# update the values of LINES and COLUMNS.
+shopt -s checkwinsize
+
+# If set, the pattern "**" used in a pathname expansion context will
+# match all files and zero or more directories and subdirectories.
+#shopt -s globstar
+
+# make less more friendly for non-text input files, see lesspipe(1)
+[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+
+# set variable identifying the chroot you work in (used in the prompt below)
+if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
+    debian_chroot=$(cat /etc/debian_chroot)
+fi
+
+# set a fancy prompt (non-color, unless we know we "want" color)
+case "$TERM" in
+    xterm-color|*-256color) color_prompt=yes;;
+esac
+
+# uncomment for a colored prompt, if the terminal has the capability; turned
+# off by default to not distract the user: the focus in a terminal window
+# should be on the output of commands, not on the prompt
+#force_color_prompt=yes
+
+if [ -n "$force_color_prompt" ]; then
+    if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
+	# We have color support; assume it's compliant with Ecma-48
+	# (ISO/IEC-6429). (Lack of such support is extremely rare, and such
+	# a case would tend to support setf rather than setaf.)
+	color_prompt=yes
+    else
+	color_prompt=
     fi
-}
-export PATH=$HOME/.npm-global/bin:$PATH
-
-# ---- FZF (búsqueda difusa) ----
-if [ -f /usr/share/fzf/shell/key-bindings.bash ]; then
-    source /usr/share/fzf/shell/key-bindings.bash
-fi
-source /etc/bash_completion.d/fzf 2>/dev/null
-export FZF_DEFAULT_OPTS="--height 60% --layout=reverse --border --preview-window=right:60%"
-export FZF_CTRL_T_OPTS="--preview 'bat -n --color=always {} 2>/dev/null || cat {}'"
-export FZF_ALT_C_OPTS="--preview 'eza -1 --icons --tree --level=2 {} 2>/dev/null || ls {}'"
-
-# ---- Zoxide ----
-if command -v zoxide &>/dev/null; then
-    eval "$(zoxide init bash)"
-    function z() {
-      if [ $# -eq 0 ]; then
-        zoxide query -i
-      else
-        cd "$(zoxide query "$@")"
-      fi
-    }
 fi
 
-# ---- TheFuck ----
-if command -v thefuck &>/dev/null; then
-    eval "$(thefuck --alias)"
+if [ "$color_prompt" = yes ]; then
+    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+else
+    PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
+fi
+unset color_prompt force_color_prompt
+
+# If this is an xterm set the title to user@host:dir
+case "$TERM" in
+xterm*|rxvt*)
+    PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
+    ;;
+*)
+    ;;
+esac
+
+# enable color support of ls and also add handy aliases
+if [ -x /usr/bin/dircolors ]; then
+    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+    alias ls='ls --color=auto'
+    #alias dir='dir --color=auto'
+    #alias vdir='vdir --color=auto'
+
+    alias grep='grep --color=auto'
+    alias fgrep='fgrep --color=auto'
+    alias egrep='egrep --color=auto'
 fi
 
-# ---- Fastfetch random ----
-if command -v fastfetch &>/dev/null && [ -f /usr/local/bin/script_fast.sh ]; then
-    fast0
+# colored GCC warnings and errors
+#export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
+
+# some more ls aliases
+alias ll='ls -alF'
+alias la='ls -A'
+alias l='ls -CF'
+
+# Add an "alert" alias for long running commands.  Use like so:
+#   sleep 10; alert
+alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
+
+# Alias definitions.
+# You may want to put all your additions into a separate file like
+# ~/.bash_aliases, instead of adding them here directly.
+# See /usr/share/doc/bash-doc/examples in the bash-doc package.
+
+if [ -f ~/.bash_aliases ]; then
+    . ~/.bash_aliases
 fi
 
-# ---- mimocode (4.1 - using $HOME) ----
-if [ -d "$HOME/.mimocode/bin" ]; then
-    export PATH="$HOME/.mimocode/bin:$PATH"
+# enable programmable completion features (you don't need to enable
+# this, if it's already enabled in /etc/bash.bashrc and /etc/profile
+# sources /etc/bash.bashrc).
+if ! shopt -oq posix; then
+  if [ -f /usr/share/bash-completion/bash_completion ]; then
+    . /usr/share/bash-completion/bash_completion
+  elif [ -f /etc/bash_completion ]; then
+    . /etc/bash_completion
+  fi
 fi
 
-# ---- Starship prompt ----
-if command -v starship &>/dev/null; then
+# pnpm
+export PNPM_HOME="/home/martinmartinez/.local/share/pnpm"
+export PATH="$PNPM_HOME:$PNPM_HOME/bin:$PATH"
+# pnpm end
+
+
+export PATH="$HOME/.cargo/bin:$PATH"
+
+
+# Load Angular CLI autocompletion.
+command -v ng >/dev/null 2>&1 && source <(ng completion script)
+
+# ============================================
+# Personal dotfiles
+# ============================================
+if [ -f ~/.personal/aliases.sh ]; then
+    . ~/.personal/aliases.sh
+fi
+
+if command -v starship >/dev/null 2>&1; then
     eval "$(starship init bash)"
 fi
 
-# ---- Buscador interactivo de aliases con fzf ----
-__insert_alias() {
-    local selected
-    selected=$(grep "^alias " ~/.personal/aliases.sh | sed "s/^alias //" | fzf --reverse | cut -d= -f1)
-    if [[ -n "$selected" ]]; then
-        READLINE_LINE="$selected"
-        READLINE_POINT=${#selected}
-    fi
-}
-bind -x '"\C-b": __insert_alias'
-
-# ---- Go (4.2 - conditional) ----
-if [ -d "$HOME/go/bin" ]; then
-    export PATH="$HOME/go/bin:$PATH"
+if command -v zoxide >/dev/null 2>&1; then
+    eval "$(zoxide init bash)"
 fi
 
-# ---- scrcpy alias (4.7 - conditional for WSL) ----
-if ! is_wsl && command -v scrcpy &>/dev/null; then
-    alias scy='scrcpy'
+if [ -f /usr/share/doc/fzf/examples/key-bindings.bash ]; then
+    . /usr/share/doc/fzf/examples/key-bindings.bash
+fi
+
+if [ -f /usr/share/doc/fzf/examples/completion.bash ]; then
+    . /usr/share/doc/fzf/examples/completion.bash
 fi

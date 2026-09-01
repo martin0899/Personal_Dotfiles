@@ -26,8 +26,9 @@ declare -a FAILED=()
 install_tool() {
     local tool_name="$1"
     local pkg_name="${2:-$1}"  # Package name may differ from command name
+    local alt_cmd="${3:-}"     # Alternative binary (bat is batcat on Debian/Ubuntu)
 
-    if command -v "$tool_name" &>/dev/null; then
+    if command -v "$tool_name" &>/dev/null || { [ -n "$alt_cmd" ] && command -v "$alt_cmd" &>/dev/null; }; then
         ok "$tool_name is already installed"
         INSTALLED+=("$tool_name")
         return 0
@@ -64,7 +65,7 @@ install_tool() {
 info "Installing core CLI tools..."
 
 install_tool "fzf" "fzf"
-install_tool "bat" "bat"
+install_tool "bat" "bat" "batcat"
 install_tool "eza" "eza"
 install_tool "zoxide" "zoxide"
 install_tool "starship" "starship"
@@ -72,6 +73,20 @@ install_tool "lazygit" "lazygit"
 install_tool "ranger" "ranger"
 install_tool "thefuck" "thefuck"
 install_tool "duf" "duf"
+
+# 6.2b Tools used by personal aliases (best effort: not all exist in every repo)
+install_tool "fastfetch" "fastfetch"
+install_tool "tty-clock" "tty-clock"
+install_tool "scrcpy" "scrcpy"
+install_tool "podman" "podman"
+
+# ncspot and tldr are not packaged in Ubuntu repos - only attempt on other distros
+if [ "$DISTRO" != "ubuntu" ]; then
+    install_tool "ncspot" "ncspot"
+    install_tool "tldr" "tldr"
+else
+    info "Skipping ncspot and tldr (not available via apt on Ubuntu)"
+fi
 
 # 6.3 Install neovim
 info "Installing neovim..."
@@ -122,26 +137,6 @@ fi
 # 6.4 WSL-specific installations
 if [ "$IS_WSL" = true ]; then
     info "Installing WSL-specific tools..."
-
-    # ncspot binary (instead of snap)
-    if ! command -v ncspot &>/dev/null; then
-        info "Installing ncspot (binary)..."
-        NCSPOT_URL="https://github.com/hrkfdn/ncspot/releases/latest/download/ncspot-v1.2.1-linux-x86_64.tar.gz"
-        if curl -fSL "$NCSPOT_URL" -o /tmp/ncspot.tar.gz >/dev/null 2>&1; then
-            tar -xzf /tmp/ncspot.tar.gz -C /tmp/ >/dev/null 2>&1
-            sudo mv /tmp/ncspot /usr/local/bin/ncspot 2>/dev/null
-            sudo chmod +x /usr/local/bin/ncspot 2>/dev/null
-            rm -f /tmp/ncspot.tar.gz
-            ok "ncspot installed (binary)"
-            INSTALLED+=("ncspot")
-        else
-            warn "ncspot binary download failed"
-            FAILED+=("ncspot")
-        fi
-    else
-        ok "ncspot is already installed"
-        INSTALLED+=("ncspot")
-    fi
 
     # win32yank for clipboard
     if ! command -v win32yank.exe &>/dev/null; then

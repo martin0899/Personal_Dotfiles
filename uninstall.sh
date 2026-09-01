@@ -36,15 +36,23 @@ echo ""
 # 2. Remove stow symlinks
 info "Removing stow symlinks..."
 
-PACKAGES=("bash" "nvim" "starship" "ranger" "fastfetch" "git" "personal")
-
-for pkg in "${PACKAGES[@]}"; do
-    if stow -D "$pkg" -d "$DOTFILES_DIR" -t "$HOME" 2>/dev/null; then
+stow_remove() {
+    local pkg="$1"
+    local target="${2:-$HOME}"
+    if stow -D "$pkg" -d "$DOTFILES_DIR" -t "$target" 2>/dev/null; then
         ok "Removed symlinks for: $pkg"
     else
         warn "No symlinks found for: $pkg"
     fi
-done
+}
+
+stow_remove "bash" "$HOME"
+stow_remove "nvim" "$HOME/.config"
+stow_remove "starship" "$HOME/.config"
+stow_remove "ranger" "$HOME/.config"
+stow_remove "fastfetch" "$HOME/.config"
+stow_remove "git" "$HOME"
+stow_remove "personal" "$HOME/.personal"
 echo ""
 
 # 3. Remove script_fast.sh
@@ -108,9 +116,11 @@ echo ""
 echo "  CLI tools were NOT uninstalled."
 echo "  Use your package manager to remove them:"
 echo ""
-if [ "$PKG_MGR" = "dnf" ]; then
-    echo "    sudo dnf remove fzf bat eza zoxide starship lazygit ranger thefuck duf"
-elif [ "$PKG_MGR" = "apt" ]; then
-    echo "    sudo apt remove fzf bat eza zoxide starship lazygit ranger thefuck duf"
+if [ "$PKG_MGR" = "dnf" ] || [ "$PKG_MGR" = "apt" ]; then
+    TOOLS="fzf bat eza zoxide starship lazygit ranger thefuck duf fastfetch tty-clock scrcpy podman"
+    if [ "$DISTRO" != "ubuntu" ]; then
+        TOOLS="$TOOLS ncspot tldr"
+    fi
+    echo "    sudo $PKG_MGR remove $TOOLS"
 fi
 echo ""

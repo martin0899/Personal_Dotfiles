@@ -25,7 +25,7 @@ alias vim='nvim'
 alias nv='nvim'
 
 # ---- fzf shortcuts ----
-alias fv='nvim $(fzf --reverse --preview "bat -n --color=always {} 2>/dev/null || cat {}")'
+alias fv='nvim $(fzf --reverse --preview "bat -n --color=always {} 2>/dev/null || batcat -n --color=always {} 2>/dev/null || cat {}")'
 alias fcd='cd $(find . -type d 2>/dev/null | sed "s|^\./||" | fzf --reverse --preview "eza -1 --icons --tree --level=2 {} 2>/dev/null")'
 alias fkill='ps -eo pid,user,comm --sort=-%mem | fzf --header-lines=1 --preview "echo {}" | awk "{print \$1}" | xargs kill 2>/dev/null'
 
@@ -39,7 +39,11 @@ alias fast3='fastfetch -c ~/.config/fastfetch/config3.jsonc'
 alias fast0='/usr/local/bin/script_fast.sh'
 alias grep='grep --color=auto'
 alias df='duf'
-alias cat='bat --paging=never 2>/dev/null || cat'
+if command -v bat >/dev/null 2>&1; then
+    alias cat='bat --paging=never'
+elif command -v batcat >/dev/null 2>&1; then
+    alias cat='batcat --paging=never'
+fi
 
 # ---- Git ----
 alias gs='git status'

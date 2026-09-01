@@ -71,10 +71,6 @@ return {
       { "<leader>cb", desc = "Comentar abajo" },
       { "<leader>ce", desc = "Comentar final de línea" },
 
-      { "<leader>m", group = "Imagen" },
-      { "<leader>mi", desc = "Selector imágenes (:Image)" },
-      { "<leader>mp", desc = "Vista previa (:ImagePreview)" },
-
       { "<leader>n", group = "Proyectos" },
       { "<leader>np", desc = "Crear proyecto (project-templates)" },
 

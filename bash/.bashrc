@@ -135,12 +135,45 @@ if [ -f ~/.personal/aliases.sh ]; then
     . ~/.personal/aliases.sh
 fi
 
+# Ranger directory navigation
+function rgr() {
+    if ! command -v ranger >/dev/null 2>&1; then
+        printf 'rgr: ranger is not installed\n' >&2
+        return 127
+    fi
+
+    local temp_file target_dir
+    temp_file="$(mktemp -t "ranger_cd.XXXXXXXXXX")" || return 1
+    ranger --choosedir="$temp_file" "$@"
+
+    if [ -f "$temp_file" ]; then
+        target_dir="$(<"$temp_file")"
+        rm -f "$temp_file"
+        if [ -d "$target_dir" ] && [ "$target_dir" != "$PWD" ]; then
+            cd -- "$target_dir" || return
+        fi
+    fi
+}
+
 if command -v starship >/dev/null 2>&1; then
     eval "$(starship init bash)"
 fi
 
+# Zoxide navigation with interactive selection when no argument is given.
 if command -v zoxide >/dev/null 2>&1; then
     eval "$(zoxide init bash)"
+
+    function z() {
+        local target_dir
+
+        if [ "$#" -eq 0 ]; then
+            target_dir="$(zoxide query -i)" || return
+        else
+            target_dir="$(zoxide query "$@")" || return
+        fi
+
+        [ -n "$target_dir" ] && cd -- "$target_dir"
+    }
 fi
 
 if [ -f /usr/share/doc/fzf/examples/key-bindings.bash ]; then

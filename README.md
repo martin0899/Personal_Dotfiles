@@ -31,6 +31,33 @@ The `install.sh` script will:
 3. **Install CLI tools** - fzf, bat, eza, zoxide, starship, lazygit, ranger, thefuck, duf, neovim, fastfetch, tty-clock, scrcpy, podman (best effort per distro; ncspot and tldr are skipped on Ubuntu since apt doesn't package them)
 4. **Create symlinks** - Via GNU Stow
 
+### Reinstallation
+
+`install.sh` is safe to run more than once. It can be used to reinstall the
+tools and refresh the configuration symlinks without removing the current
+installation:
+
+```bash
+./install.sh
+source ~/.bashrc
+```
+
+During a repeated installation, files already managed by this repository are
+kept in place. External configuration files are moved to a timestamped
+directory under `~/.dotfiles-backup/` before Stow creates the symlinks.
+
+For a clean reinstallation, remove the symlinks first and skip backup
+restoration when prompted:
+
+```bash
+./uninstall.sh
+./install.sh
+source ~/.bashrc
+```
+
+The uninstall script does not remove the installed CLI tools. The backups are
+kept in `~/.dotfiles-backup/` so they can be restored manually if needed.
+
 ### Prerequisites
 
 - `git` (installed automatically if missing)
